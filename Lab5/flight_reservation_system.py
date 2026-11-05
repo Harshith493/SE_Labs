@@ -1,89 +1,123 @@
+"""Manage a small flight schedule and demonstrate reservation operations."""
+
 import hashlib
 import json
 import math
 import secrets
 
-flights = {
-    "AI101": {"destination": "London", "seats": 2, "capacity": 2, "fare": 450.0, "is_full": False},
-    "BA202": {"destination": "New York", "seats": 0, "capacity": 2, "fare": 600.0, "is_full": True},
-    "EK303": {"destination": "Dubai", "seats": 5, "capacity": 5, "fare": 320.0, "is_full": False},
+FLIGHTS = {
+    "AI101": {
+        "destination": "London",
+        "seats": 2,
+        "capacity": 2,
+        "fare": 450.0,
+        "is_full": False,
+    },
+    "BA202": {
+        "destination": "New York",
+        "seats": 0,
+        "capacity": 2,
+        "fare": 600.0,
+        "is_full": True,
+    },
+    "EK303": {
+        "destination": "Dubai",
+        "seats": 5,
+        "capacity": 5,
+        "fare": 320.0,
+        "is_full": False,
+    },
 }
 
-total_revenue = 0.0
+TOTAL_REVENUE = 0.0
 
 
-def bookFlightSeat(flight_no, passenger, luggage_weight=15, baggage_tags=[]):
-    global total_revenue
-    if flight_no not in flights or flights[flight_no]["is_full"]:
+def book_flight_seat(
+    flight_no, passenger, luggage_weight=15, baggage_tags=None
+):
+    """Reserve one available seat and record the booking details."""
+    global TOTAL_REVENUE
+    flight = FLIGHTS.get(flight_no)
+    if flight is None or flight["is_full"] or flight["seats"] <= 0:
         return False
-    flights[flight_no]["seats"] -= 1
-    if flights[flight_no]["seats"] <= 0:
-        flights[flight_no]["is_full"] = True
-    total_revenue += flights[flight_no]["fare"]
-    baggage_tags.append("Booked seat on flight %s for passenger %s with baggage weight %d" % (flight_no, passenger, luggage_weight))
+
+    flight["seats"] -= 1
+    flight["is_full"] = flight["seats"] == 0
+    TOTAL_REVENUE += flight["fare"]
+    if baggage_tags is None:
+        baggage_tags = []
+    baggage_tags.append(
+        f"Booked seat on flight {flight_no} for passenger {passenger} "
+        f"with baggage weight {luggage_weight}"
+    )
     return True
 
 
-def cancelBooking(flight_no):
-    flight = flights.get(flight_no)
+def cancel_booking(flight_no):
+    """Restore a seat when the flight exists and is not already at capacity."""
+    flight = FLIGHTS.get(flight_no)
     if flight is None or flight["seats"] >= flight["capacity"]:
         return False
+
     flight["seats"] += 1
     flight["is_full"] = False
     return True
 
 
-def checkSeatAvailability(flight_no):
-    airport_fee = 35.0
-    if flights.get(flight_no) == None:
-        return False
-    if not flights[flight_no]["is_full"]:
-        return True
-    else:
-        return False
+def check_seat_availability(flight_no):
+    """Return whether a flight currently has at least one bookable seat open."""
+    flight = FLIGHTS.get(flight_no)
+    return flight is not None and not flight["is_full"] and flight["seats"] > 0
 
 
-def calculateBaggageFee(flight_no, surcharge_rate):
-    flight = flights.get(flight_no)
+def calculate_baggage_fee(flight_no, surcharge_rate):
+    """Calculate a baggage surcharge using a numeric rate."""
+    flight = FLIGHTS.get(flight_no)
     if flight is None:
-        raise ValueError("Unknown flight: %s" % flight_no)
+        raise ValueError(f"Unknown flight: {flight_no}")
     if not math.isfinite(surcharge_rate) or surcharge_rate < 0:
-        raise ValueError("Surcharge rate must be finite and non-negative")
+        raise ValueError(
+            "Surcharge rate must be a finite, non-negative number."
+        )
     return flight["fare"] * surcharge_rate
 
 
-def generatePassengerHash(passenger_id):
+def generate_passenger_hash(passenger_id):
+    """Return a stable SHA-256 digest for a passenger identifier."""
     return hashlib.sha256(passenger_id.encode("utf-8")).hexdigest()
 
 
-def generateBoardingPin():
+def generate_boarding_pin():
+    """Generate a four-digit boarding PIN using a secure random source."""
     return secrets.randbelow(9000) + 1000
 
 
-def exportFlightManifest(filename="flight_manifest.txt"):
+def export_flight_manifest(filename="flight_manifest.txt"):
+    """Write the flight schedule as JSON and report the output path."""
     with open(filename, "w", encoding="utf-8") as manifest_file:
-        json.dump(flights, manifest_file, indent=2)
+        json.dump(FLIGHTS, manifest_file, indent=2)
         manifest_file.write("\n")
-    print("Boarding manifest exported: " + filename)
+    print(f"Boarding manifest exported: {filename}")
 
 
-def getFlightSummary(flight_schedule):
-    count = 0
-    for flight_no, details in flight_schedule.items():
-        if not details["is_full"]:
-            count += 1
-    return count
+def get_flight_summary(flight_schedule):
+    """Return the number of flights with seats available."""
+    return sum(
+        not flight["is_full"] and flight["seats"] > 0
+        for flight in flight_schedule.values()
+    )
 
 
 def main():
-    bookFlightSeat("AI101", "Kritika", 20)
-    cancelBooking("BA202")
-    print("Is AI101 open:", checkSeatAvailability("AI101"))
-    print("Baggage Fee:", calculateBaggageFee("AI101", 0.15))
-    print("Passenger Hash:", generatePassengerHash("PASSPORT_IND_119"))
-    print("Boarding PIN:", generateBoardingPin())
-    exportFlightManifest()
-    print("Available flights:", getFlightSummary(flights))
+    """Run a short demonstration of the reservation functions."""
+    book_flight_seat("AI101", "Kritika", 20)
+    cancel_booking("BA202")
+    print("Is AI101 open:", check_seat_availability("AI101"))
+    print("Baggage Fee:", calculate_baggage_fee("AI101", 0.15))
+    print("Passenger Hash:", generate_passenger_hash("PASSPORT_IND_119"))
+    print("Boarding PIN:", generate_boarding_pin())
+    export_flight_manifest()
+    print("Available flights:", get_flight_summary(FLIGHTS))
 
 
 if __name__ == "__main__":
