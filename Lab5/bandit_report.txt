@@ -1,15 +1,10 @@
-﻿[main]	INFO	profile include tests: None
-[main]	INFO	profile exclude tests: None
-[main]	INFO	cli include tests: None
-[main]	INFO	cli exclude tests: None
-[main]	INFO	running on Python 3.12.6
-Run started:2026-11-05 05:51:33.952043+00:00
+Run started:2026-11-05 05:53:23.505543+00:00
 
 Test results:
 	No issues identified.
 
 Code scanned:
-	Total lines of code: 68
+	Total lines of code: 103
 	Total lines skipped (#nosec): 0
 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
 
@@ -25,3 +20,8 @@ Run metrics:
 		Medium: 0
 		High: 0
 Files skipped (0):
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.12.6

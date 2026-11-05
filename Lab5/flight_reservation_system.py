@@ -65,9 +65,13 @@ def cancel_booking(flight_no):
 
 
 def check_seat_availability(flight_no):
-    """Return whether a flight currently has at least one bookable seat open."""
+    """Return whether a flight has at least one bookable seat."""
     flight = FLIGHTS.get(flight_no)
-    return flight is not None and not flight["is_full"] and flight["seats"] > 0
+    return (
+        flight is not None
+        and not flight["is_full"]
+        and flight["seats"] > 0
+    )
 
 
 def calculate_baggage_fee(flight_no, surcharge_rate):
